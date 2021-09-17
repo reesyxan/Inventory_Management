@@ -1,0 +1,71 @@
+---
+title: "Square_WooCommerce_Integration"
+author: "Theresa reesyxan@umd.edu"
+date: "9/14/2021"
+output: html_document
+---
+
+
+```{r}
+library(tidyr)
+library(dplyr)
+```
+
+
+# Woocommerce Data
+
+```{r}
+wc <- read.csv("wc-export-14-9-2021.csv")
+
+#filter wc for items that have SKUs
+wc <- wc[wc$SKU != "",]
+
+```
+
+# Square Data
+
+```{r}
+sq <- read.csv("square_catalog-2021-09-14.csv")
+sq <- sq[-c(as.numeric(rownames(dups[sq[duplicated(sq$SKU),]$SKU != "",]))),]
+sq <- sq[sq$SKU != "",]
+```
+
+
+# Update WooCommerce Inventory Based on Square
+
+```{r}
+# check if sq and wc have duplicated SKUs
+if (sum(duplicated(wc$SKU[wc$SKU != ""])) == 0 & sum(duplicated(sq$SKU[sq$SKU != ""])) == 0){
+  message("No Duplicated SKUs")
+} else {
+  message("You have duplicated SKUs")
+}
+
+# filter wc for SKUs that are in  sq
+sq_SKUs <- sq$SKU[sq$SKU != ""]
+wc_SKUs <- wc$SKU[wc$SKU != ""]  
+
+
+#update stock
+wc_to_update <- wc[wc_SKUs %in% sq_SKUs,]
+sq_keep <- sq[sq$SKU %in% wc_to_update$SKU,]
+wc_stock <- wc_to_update[, c("SKU", "In.stock.", "Stock")]
+colnames(wc_stock) <- c("SKU", "wc.In.Stock.", "wc.Stock")
+sq_stock <- sq_keep[, c("SKU", "Current.Quantity.All.About.Equestrian")]
+colnames(sq_stock) <- c("SKU", "sq.Stock")
+
+merged_wc_sq <- merge(wc_stock, sq_stock, by = "SKU")
+
+for (i in 1:nrow(merged_wc_sq)){
+  if (merged_wc_sq[i,"sq.Stock"] > merged_wc_sq[i, "wc.Stock"]){
+    print(TRUE)
+  } else if (is.na(merged_wc_sq[i,"sq.Stock"]) | is.na(merged_wc_sq[i,"wc.Stock"])) {
+      print("NA")
+    }
+}
+
+#update price
+
+
+```
+
