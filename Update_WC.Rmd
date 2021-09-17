@@ -16,19 +16,29 @@ library(dplyr)
 
 ```{r}
 wc <- read.csv("wc-export-14-9-2021.csv")
-
 #filter wc for items that have SKUs
 wc <- wc[wc$SKU != "",]
-
 ```
 
 # Square Data
 
 ```{r}
-sq <- read.csv("square_catalog-2021-09-14.csv")
-sq <- sq[-c(as.numeric(rownames(dups[sq[duplicated(sq$SKU),]$SKU != "",]))),]
+sq_all <- read.csv("square_catalog-2021-09-14.csv")
+sq <- sq_all[-c(as.numeric(rownames(dups[sq_all[duplicated(sq_all$SKU),]$SKU != "",]))),]
 sq <- sq[sq$SKU != "",]
 ```
+
+
+## export Square Items without SKUs (to update)
+
+```{r}
+sq_items_to_update_SKU <- sq_all[sq_all$SKU == "",]
+sq_items_to_update_quantity <- sq_all[is.na(sq_all$Current.Quantity.All.About.Equestrian),]
+
+sq_items_to_update_SKU[,c("Item.Name", "Variation.Name", "Price", "Current.Quantity.All.About.Equestrian")]
+```
+
+
 
 
 # Update WooCommerce Inventory Based on Square
@@ -68,4 +78,3 @@ for (i in 1:nrow(merged_wc_sq)){
 
 
 ```
-
